@@ -13,6 +13,9 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.example.weather_new.databinding.ActivityMainBinding
 import com.example.weather_new.network.WeatherService
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -45,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     private  lateinit var mFusedLocationClient: FusedLocationProviderClient
 
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -75,7 +79,7 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onPermissionsChecked(report: MultiplePermissionsReport) {
                     if (report!!.areAllPermissionsGranted()) {
-
+                        Toast.makeText(this@MainActivity,"Permissions Granted", Toast.LENGTH_SHORT).show()
                         requestLocationData()
                     }
 
@@ -104,7 +108,11 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private fun getLocationWeatherDetails(longitude:Double,latitude:Double){
+    private fun getLocationWeatherDetails(latitude:Double,longitude:Double){
+
+        Toast.makeText(this@MainActivity,"Start API CALL", Toast.LENGTH_SHORT).show()
+
+
         if(Constants.isNetworkAvailable(this@MainActivity)){
             val retrofit:Retrofit= Retrofit.Builder()
                 .baseUrl(Constants.BASE_URL)
@@ -117,8 +125,11 @@ class MainActivity : AppCompatActivity() {
                 latitude,
                 longitude,
                 Constants.APP_ID,
-                Constants.METRIC_UNIT
+                //Constants.METRIC_UNIT
             )
+
+
+            println("URL: " + listCall.request().url())
 
             listCall.enqueue(object:Callback<WeatherResponse>{
 
@@ -134,11 +145,33 @@ class MainActivity : AppCompatActivity() {
                         val rc=response.code()
                         when(rc){
                             400->{
-                                Log.e("Error 400","Bad Connection")
+                                Log.e("EError","Bad Connection")
+                            }
+                            401->{
+                                Log.e("EError","Unauthorized")
+                            }
+                            402->{
+                                Log.e("EEError","Payment")
+                            }
+                            403->{
+                                Log.e("EError","Forbidden")
                             }
                             404->{
-                                Log.e("Error 404","Not Found")
+                                Log.e("EError","Not Found")
                             }
+                            405->{
+                                Log.e("EError","Not Allowed")
+                            }
+                            406->{
+                                Log.e("EError","Not Acceptable")
+                            }
+                            408->{
+                                Log.e("EError","Timeout")
+                            }
+                            409->{
+                                Log.e("EError","Conflict")
+                            }
+
                             else->{
                                 Log.e("Error","Generic Error")
                             }
@@ -152,32 +185,45 @@ class MainActivity : AppCompatActivity() {
 
             })
 
+
         }else{
             Toast.makeText(this@MainActivity,"You are not connected to the internet",Toast.LENGTH_SHORT).show()
         }
     }
 
+
+
+
     @SuppressLint("MissingPermission")
     private fun requestLocationData() {
         val mLocationRequest = LocationRequest()
-        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+
+        Toast.makeText(this@MainActivity," Location Requested", Toast.LENGTH_SHORT).show()
 
         mFusedLocationClient.requestLocationUpdates(
             mLocationRequest, mLocationCallback,
             Looper.getMainLooper()
         )
+
+
     }
 
     private val mLocationCallback=object:LocationCallback(){
         override fun onLocationResult(locationResult: LocationResult) {
+
+            Toast.makeText(this@MainActivity,"CAllback started", Toast.LENGTH_SHORT).show()
+
             val mLastLocation=locationResult.lastLocation
-            val latitude=mLastLocation!!.latitude
-            val longitude=mLastLocation!!.longitude
+            var latitude=mLastLocation!!.latitude
+            var longitude=mLastLocation!!.longitude
+
+            getLocationWeatherDetails(latitude,longitude)
 
             Toast.makeText(this@MainActivity,"Latitude:$latitude,Longitude:$longitude",Toast.LENGTH_SHORT).show()
             Log.e("current","$latitude,$longitude")
 
-            getLocationWeatherDetails(latitude,longitude)
+
         }
     }
 
