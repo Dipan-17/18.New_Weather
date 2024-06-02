@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity() {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
 
+
+
         //check location services
         if (!isLocationEnabled()) {
             Toast.makeText(this, "Location is off", Toast.LENGTH_SHORT).show()
@@ -65,6 +67,7 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onPermissionsChecked(report: MultiplePermissionsReport) {
                     if (report!!.areAllPermissionsGranted()) {
+
                         requestLocationData()
                     }
 
@@ -92,6 +95,15 @@ class MainActivity : AppCompatActivity() {
 
 
 
+
+    private fun getLocationWeatherDetails(){
+        if(Constants.isNetworkAvailable(this@MainActivity)){
+            Toast.makeText(this@MainActivity,"You are connected to the internet",Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(this@MainActivity,"You are not connected to the internet",Toast.LENGTH_SHORT).show()
+        }
+    }
+
     @SuppressLint("MissingPermission")
     private fun requestLocationData() {
         val mLocationRequest = LocationRequest()
@@ -111,6 +123,8 @@ class MainActivity : AppCompatActivity() {
 
             Toast.makeText(this@MainActivity,"Latitude:$latitude,Longitude:$longitude",Toast.LENGTH_SHORT).show()
             Log.e("current","$latitude,$longitude")
+
+            getLocationWeatherDetails()
         }
     }
 
