@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import android.view.Menu
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -340,4 +341,22 @@ class MainActivity : AppCompatActivity() {
         return sdf.format(date)
     }
 
+    //menu button in action bar
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main,menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+    //what happen selected
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        return when(item.itemId){
+            R.id.action_refresh->{
+                Toast.makeText(this,"Refreshing",Toast.LENGTH_SHORT).show()
+                requestLocationData()
+                true
+            }
+
+            else -> return super.onOptionsItemSelected(item)
+        }
+
+    }
 }
