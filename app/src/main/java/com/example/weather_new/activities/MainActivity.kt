@@ -1,22 +1,19 @@
-package com.example.weather_new
+package com.example.weather_new.activities
 
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
 import android.location.LocationManager
 
-import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.android.volley.Request
-import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
+import com.example.weather_new.R
+import com.example.weather_new.constants.Constants
 import com.example.weather_new.databinding.ActivityMainBinding
 import com.example.weather_new.network.WeatherService
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -37,9 +34,6 @@ import com.weatherapp.models.WeatherResponse
 
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
-
-
-import java.util.logging.Handler
 
 class MainActivity : AppCompatActivity() {
     //for viewbinding

@@ -1,4 +1,4 @@
-package com.example.weather_new
+package com.example.weather_new.constants
 
 import android.content.Context
 import android.net.ConnectivityManager
