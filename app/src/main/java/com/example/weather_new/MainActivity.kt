@@ -1,6 +1,7 @@
 package com.example.weather_new
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.Intent
 import android.location.LocationManager
 
@@ -46,7 +47,7 @@ class MainActivity : AppCompatActivity() {
 
     //to get latitude and longitude
     private  lateinit var mFusedLocationClient: FusedLocationProviderClient
-
+    private var mProgressDialog: Dialog?=null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,7 +111,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun getLocationWeatherDetails(latitude:Double,longitude:Double){
 
-        Toast.makeText(this@MainActivity,"Start API CALL", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this@MainActivity,"Start API CALL", Toast.LENGTH_SHORT).show()
+
+        //here we are doing stuff in the bg -> Start progress Dialog
 
 
         if(Constants.isNetworkAvailable(this@MainActivity)){
@@ -128,8 +131,12 @@ class MainActivity : AppCompatActivity() {
                 //Constants.METRIC_UNIT
             )
 
-
+            //print to console
             println("URL: " + listCall.request().url())
+
+
+            //start of background process
+            showCustomDialog()
 
             listCall.enqueue(object:Callback<WeatherResponse>{
 
@@ -138,6 +145,8 @@ class MainActivity : AppCompatActivity() {
                     response: Response<WeatherResponse>
                 ) {
                     if(response.isSuccessful){
+                        dismissDialog()
+
                         val weatherList:WeatherResponse?=response.body()
                         val weatherResponseJsonString= Gson().toJson(weatherList)
                         Log.e("Response_Result", weatherResponseJsonString)
@@ -180,6 +189,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                    dismissDialog()
                     Log.e("Errorr",t.message.toString())
                 }
 
@@ -253,5 +263,23 @@ class MainActivity : AppCompatActivity() {
         val locationManager=getSystemService(LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    private fun showCustomDialog(){
+        mProgressDialog= Dialog(this)
+        mProgressDialog!!.setContentView(R.layout.dialog_custom_progress)
+        mProgressDialog!!.show()
+    }
+    private fun dismissDialog(){
+        if(mProgressDialog!=null){
+            mProgressDialog!!.dismiss()
+        }
+    }
+
+    override fun onDestroy() {
+        binding=null
+        mProgressDialog=null
+        super.onDestroy()
+
     }
 }

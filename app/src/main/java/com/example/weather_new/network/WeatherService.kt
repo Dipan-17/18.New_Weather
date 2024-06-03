@@ -8,6 +8,8 @@ import retrofit2.http.Query
 /**
  * An Interface which defines the HTTP operations Functions.
  */
+
+//take care of the order of the parameters
 interface WeatherService {
 
     @GET("2.5/weather")//the part after the base url and before the ?
