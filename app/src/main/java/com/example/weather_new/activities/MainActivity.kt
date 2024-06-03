@@ -3,6 +3,7 @@ package com.example.weather_new.activities
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
+import android.icu.text.SimpleDateFormat
 import android.location.LocationManager
 
 import android.os.Bundle
@@ -34,6 +35,9 @@ import com.weatherapp.models.WeatherResponse
 
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class MainActivity : AppCompatActivity() {
     //for viewbinding
@@ -74,7 +78,7 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onPermissionsChecked(report: MultiplePermissionsReport) {
                     if (report!!.areAllPermissionsGranted()) {
-                        Toast.makeText(this@MainActivity,"Permissions Granted", Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(this@MainActivity,"Permissions Granted", Toast.LENGTH_SHORT).show()
                         requestLocationData()
                     }
 
@@ -122,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                 latitude,
                 longitude,
                 Constants.APP_ID,
-                //Constants.METRIC_UNIT
+                Constants.METRIC_UNIT
             )
 
             //print to console
@@ -144,6 +148,7 @@ class MainActivity : AppCompatActivity() {
                         val weatherList:WeatherResponse?=response.body()
                         val weatherResponseJsonString= Gson().toJson(weatherList)
                         Log.e("Response_Result", weatherResponseJsonString)
+                        setUI(weatherList!!)
                     }else{
                         val rc=response.code()
                         when(rc){
@@ -203,7 +208,7 @@ class MainActivity : AppCompatActivity() {
         val mLocationRequest = LocationRequest()
         mLocationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
 
-        Toast.makeText(this@MainActivity," Location Requested", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this@MainActivity," Location Requested", Toast.LENGTH_SHORT).show()
 
         mFusedLocationClient.requestLocationUpdates(
             mLocationRequest, mLocationCallback,
@@ -216,7 +221,7 @@ class MainActivity : AppCompatActivity() {
     private val mLocationCallback=object:LocationCallback(){
         override fun onLocationResult(locationResult: LocationResult) {
 
-            Toast.makeText(this@MainActivity,"CAllback started", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this@MainActivity,"CAllback started", Toast.LENGTH_SHORT).show()
 
             val mLastLocation=locationResult.lastLocation
             var latitude=mLastLocation!!.latitude
@@ -224,7 +229,7 @@ class MainActivity : AppCompatActivity() {
 
             getLocationWeatherDetails(latitude,longitude)
 
-            Toast.makeText(this@MainActivity,"Latitude:$latitude,Longitude:$longitude",Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this@MainActivity,"Latitude:$latitude,Longitude:$longitude",Toast.LENGTH_SHORT).show()
             Log.e("current","$latitude,$longitude")
 
 
@@ -276,4 +281,63 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
 
     }
+
+    private fun setUI(weatherList:WeatherResponse){
+        for(i in weatherList.weather.indices){
+            Log.e("Weather",""+weatherList.weather[i].description)
+
+            binding?.tvMain?.text=weatherList.weather[i].main
+            binding?.tvMainDescription?.text=weatherList.weather[i].description
+
+            binding?.tvTemp?.text=weatherList.main.temp.toString() + getUnit(application.resources.configuration.locales.toString())
+
+            binding?.tvSunriseTime?.text=unixTime(weatherList.sys.sunrise)
+            binding?.tvSunsetTime?.text=unixTime(weatherList.sys.sunset)
+
+            binding?.tvHumidity?.text=weatherList.main.humidity.toString() + " per cent"
+            binding?.tvMin?.text=weatherList.main.temp_min.toString() + " min"
+            binding?.tvMax?.text=weatherList.main.temp_max.toString() + " max"
+
+            binding?.tvSpeed?.text=weatherList.wind.speed.toString()
+            binding?.tvName?.text=weatherList.name
+
+            binding?.tvCountry?.text=weatherList.sys.country
+
+
+            when (weatherList.weather[i].icon) {
+
+                    "01d" -> binding?.ivMain?.setImageResource(R.drawable.sunny)
+                    "02d" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "03d" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "04d" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "04n" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "10d" -> binding?.ivMain?.setImageResource(R.drawable.rain)
+                    "11d" -> binding?.ivMain?.setImageResource(R.drawable.storm)
+                    "13d" -> binding?.ivMain?.setImageResource(R.drawable.snowflake)
+                    "01n" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "02n" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "03n" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "10n" ->binding?.ivMain?.setImageResource(R.drawable.cloud)
+                    "11n" -> binding?.ivMain?.setImageResource(R.drawable.rain)
+                    "13n" -> binding?.ivMain?.setImageResource(R.drawable.snowflake)
+            }
+
+        }
+    }
+
+    private fun getUnit(value:String):String?{
+        var value="°C"
+        if("US"==value||"LR"==value||"MM"==value){
+            value="°F"
+        }
+        return value
+    }
+
+    private fun unixTime(timex:Long):String?{
+        val date= Date(timex*1000L)
+        val sdf=SimpleDateFormat("HH:mm", Locale.UK)
+        sdf.timeZone=android.icu.util.TimeZone.getDefault()
+        return sdf.format(date)
+    }
+
 }

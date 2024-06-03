@@ -17,6 +17,6 @@ interface WeatherService {
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
         @Query("appid") appid: String?,
-        //@Query("units") units: String?
+        @Query("units") units: String?
     ): Call<WeatherResponse>//return a weather response object as a json
 }
