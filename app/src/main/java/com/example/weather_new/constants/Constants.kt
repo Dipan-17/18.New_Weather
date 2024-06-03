@@ -6,6 +6,11 @@ import android.net.NetworkCapabilities
 import android.os.Build
 
 object Constants {
+    const val PREFERENCE_NAME ="WeatherAppPreference"
+    const val WEATHER_RESPONSE_DATA = "weather_response_data"
+
+
+
     const val APP_ID: String = "70e6fd5562f6e12a4738469c5930ddf9"
     const val BASE_URL: String = "https://api.openweathermap.org/data/"
     const val METRIC_UNIT: String = "metric"

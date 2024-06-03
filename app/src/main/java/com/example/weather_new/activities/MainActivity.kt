@@ -3,6 +3,7 @@ package com.example.weather_new.activities
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
+import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.location.LocationManager
 
@@ -48,6 +49,8 @@ class MainActivity : AppCompatActivity() {
     private  lateinit var mFusedLocationClient: FusedLocationProviderClient
     private var mProgressDialog: Dialog?=null
 
+    //shared preferences
+    private lateinit var mSharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +60,10 @@ class MainActivity : AppCompatActivity() {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
 
+
+        //shared preferences
+        mSharedPreferences=getSharedPreferences(Constants.PREFERENCE_NAME, MODE_PRIVATE)
+        setUI()//populate old data from shared preferences
 
 
         //check location services
@@ -149,7 +156,13 @@ class MainActivity : AppCompatActivity() {
                         val weatherList:WeatherResponse?=response.body()
                         val weatherResponseJsonString= Gson().toJson(weatherList)
                         Log.e("Response_Result", weatherResponseJsonString)
-                        setUI(weatherList!!)
+
+                        //store output in sharedPreferenes
+                        val editor=mSharedPreferences.edit()
+                        editor.putString(Constants.WEATHER_RESPONSE_DATA,weatherResponseJsonString)
+                        editor.apply()
+                        //get data from sharedPreferences directly
+                        setUI()
                     }else{
                         val rc=response.code()
                         when(rc){
@@ -283,29 +296,37 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun setUI(weatherList:WeatherResponse){
-        for(i in weatherList.weather.indices){
-            Log.e("Weather",""+weatherList.weather[i].description)
+    private fun setUI(){
+        val weatherResponse=mSharedPreferences.getString(
+            Constants.WEATHER_RESPONSE_DATA,
+            ""
+        )
 
-            binding?.tvMain?.text=weatherList.weather[i].main
-            binding?.tvMainDescription?.text=weatherList.weather[i].description
+        if(!weatherResponse.isNullOrEmpty()){
+            val weatherListJSON=Gson().fromJson(weatherResponse,WeatherResponse::class.java)
 
-            binding?.tvTemp?.text=weatherList.main.temp.toString() + getUnit(application.resources.configuration.locales.toString())
+            for(i in weatherListJSON.weather.indices){
+                Log.e("Weather",""+weatherListJSON.weather[i].description)
 
-            binding?.tvSunriseTime?.text=unixTime(weatherList.sys.sunrise)
-            binding?.tvSunsetTime?.text=unixTime(weatherList.sys.sunset)
+                binding?.tvMain?.text=weatherListJSON.weather[i].main
+                binding?.tvMainDescription?.text=weatherListJSON.weather[i].description
 
-            binding?.tvHumidity?.text=weatherList.main.humidity.toString() + " per cent"
-            binding?.tvMin?.text=weatherList.main.temp_min.toString() + " min"
-            binding?.tvMax?.text=weatherList.main.temp_max.toString() + " max"
+                binding?.tvTemp?.text=weatherListJSON.main.temp.toString() + getUnit(application.resources.configuration.locales.toString())
 
-            binding?.tvSpeed?.text=weatherList.wind.speed.toString()
-            binding?.tvName?.text=weatherList.name
+                binding?.tvSunriseTime?.text=unixTime(weatherListJSON.sys.sunrise)
+                binding?.tvSunsetTime?.text=unixTime(weatherListJSON.sys.sunset)
 
-            binding?.tvCountry?.text=weatherList.sys.country
+                binding?.tvHumidity?.text=weatherListJSON.main.humidity.toString() + " per cent"
+                binding?.tvMin?.text=weatherListJSON.main.temp_min.toString() + " min"
+                binding?.tvMax?.text=weatherListJSON.main.temp_max.toString() + " max"
+
+                binding?.tvSpeed?.text=weatherListJSON.wind.speed.toString()
+                binding?.tvName?.text=weatherListJSON.name
+
+                binding?.tvCountry?.text=weatherListJSON.sys.country
 
 
-            when (weatherList.weather[i].icon) {
+                when (weatherListJSON.weather[i].icon) {
 
                     "01d" -> binding?.ivMain?.setImageResource(R.drawable.sunny)
                     "02d" -> binding?.ivMain?.setImageResource(R.drawable.cloud)
@@ -321,9 +342,12 @@ class MainActivity : AppCompatActivity() {
                     "10n" ->binding?.ivMain?.setImageResource(R.drawable.cloud)
                     "11n" -> binding?.ivMain?.setImageResource(R.drawable.rain)
                     "13n" -> binding?.ivMain?.setImageResource(R.drawable.snowflake)
-            }
+                }
 
+            }
         }
+
+
     }
 
     private fun getUnit(value:String):String?{
